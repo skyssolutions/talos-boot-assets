@@ -20,6 +20,8 @@ env:
   INTEL_UCODE_VERSION: 20240531
   # renovate: depName=ghcr.io/siderolabs/i915-ucode
   I915_UCODE_VERSION: 20240513
+  # renovate: depName=ghcr.io/siderolabs/util-linux
+  LINUX_UTILS_VERSION: v1.6.0-18-gb84979
 
 jobs:
   check-releases:
@@ -193,14 +195,15 @@ jobs:
         - /dev:/dev
 
     steps:
-      - name: Build amd64 installer with I915 & Intel Ucode
+      - name: Build amd64 installer
         run: |
           /bin/imager installer \
             --arch amd64 \
             --base-installer-image registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }} \
             --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi:d9ea36b-dirty --overlay-name=rpi_generic \
             --system-extension-image ghcr.io/siderolabs/i915-ucode:${{ env.I915_UCODE_VERSION }} \
-            --system-extension-image ghcr.io/siderolabs/intel-ucode:${{ env.INTEL_UCODE_VERSION }}
+            --system-extension-image ghcr.io/siderolabs/intel-ucode:${{ env.INTEL_UCODE_VERSION }} \
+            --system-extension-image ghcr.io/siderolabs/util-linux:${{ env.LINUX_UTILS_VERSION }}
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v3
@@ -226,12 +229,13 @@ jobs:
         - /dev:/dev
 
     steps:
-      - name: Build arm64 installer with I915 & Intel Ucode
+      - name: Build arm64 installer
         run: |
           /bin/imager installer \
             --arch arm64 \
             --base-installer-image registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }} \
-            --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi:d9ea36b-dirty --overlay-name=rpi_generic
+            --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi:d9ea36b-dirty --overlay-name=rpi_generic \
+            --system-extension-image ghcr.io/siderolabs/util-linux:${{ env.LINUX_UTILS_VERSION }}
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v3
