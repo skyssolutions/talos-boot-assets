@@ -180,7 +180,7 @@ jobs:
   build-boot-assets-amd64:
     needs: [ check-releases, build-installer ]
     if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
-    name: Build boot assets
+    name: Build boot assets (amd64)
     runs-on: ubuntu-latest
 
     permissions:
@@ -213,7 +213,7 @@ jobs:
   build-boot-assets-arm64:
     needs: [ check-releases, build-installer ]
     if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
-    name: Build boot assets
+    name: Build boot assets (arm64)
     runs-on: ubuntu-latest
 
     permissions:
