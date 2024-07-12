@@ -7,7 +7,7 @@
   "packageRules": [
     {
       "description": "Group updates into single PR",
-      "matchFileNames": [".github/workflows/talos-boot-assets.yaml"],
+      "matchFileNames": [".github/workflows/assets.yaml"],
       "groupName": "Talos boot assets"
     },
     {
