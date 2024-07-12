@@ -19,7 +19,7 @@ env:
   # renovate: depName=ghcr.io/siderolabs/intel-ucode
   INTEL_UCODE_VERSION: 20240531
   # renovate: depName=ghcr.io/siderolabs/i915-ucode
-  I915_UCODE_VERSION: 20231111
+  I915_UCODE_VERSION: 20240513
 
 jobs:
   check-releases:
