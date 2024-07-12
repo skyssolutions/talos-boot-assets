@@ -198,7 +198,7 @@ jobs:
           /bin/imager installer \
             --arch amd64 \
             --base-installer-image registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }} \
-            --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi:c0739b9-dirty --overlay-name=rpi_generic \
+            --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi:d9ea36b-dirty --overlay-name=rpi_generic \
             --system-extension-image ghcr.io/siderolabs/i915-ucode:${{ env.I915_UCODE_VERSION }} \
             --system-extension-image ghcr.io/siderolabs/intel-ucode:${{ env.INTEL_UCODE_VERSION }}
 
@@ -231,7 +231,7 @@ jobs:
           /bin/imager installer \
             --arch arm64 \
             --base-installer-image registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }} \
-            --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi:c0739b9-dirty --overlay-name=rpi_generic
+            --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi:d9ea36b-dirty --overlay-name=rpi_generic
 
       - name: Upload installer artifact
         uses: actions/upload-artifact@v3
