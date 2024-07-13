@@ -138,7 +138,7 @@ jobs:
     needs: [ check-releases ]
     if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
     name: Build installer image
-    runs-on: ubuntu-latest
+    runs-on: buildjet-16vcpu-ubuntu-2204
 
     steps:
       - name: Checkout
