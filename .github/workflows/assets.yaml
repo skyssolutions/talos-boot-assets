@@ -201,13 +201,12 @@ jobs:
           /bin/imager installer \
             --arch amd64 \
             --base-installer-image registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }} \
-            --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi@sha256:f5734630fbae0647daf6e490ff91cd5f95220c3fc34e64364b2f245cde502a43 --overlay-name=rpi_generic \
             --system-extension-image ghcr.io/siderolabs/i915-ucode:${{ env.I915_UCODE_VERSION }} \
             --system-extension-image ghcr.io/siderolabs/intel-ucode:${{ env.INTEL_UCODE_VERSION }} \
             --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }}
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: talos-installer-amd64
           path: /out/installer-amd64.tar
@@ -239,7 +238,7 @@ jobs:
             --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }}
 
       - name: Upload installer artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: talos-installer-arm64
           path: /out/installer-arm64.tar
