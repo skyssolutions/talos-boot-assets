@@ -205,6 +205,15 @@ jobs:
             --system-extension-image ghcr.io/siderolabs/intel-ucode:${{ env.INTEL_UCODE_VERSION }} \
             --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }}
 
+      - name: Upload file to bucket
+        uses: koraykoska/s3-upload-github-action@master
+        env:
+          FILE: /out/installer-amd64.tar
+          S3_ENDPOINT: 's3.skym.fi'
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+
       - name: Upload installer artifact
         uses: actions/upload-artifact@v4
         with:
@@ -237,13 +246,14 @@ jobs:
             --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi@sha256:f5734630fbae0647daf6e490ff91cd5f95220c3fc34e64364b2f245cde502a43 --overlay-name=rpi_generic \
             --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }}
 
-      - name: Upload installer artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: talos-installer-arm64
-          path: /out/installer-arm64.tar
-          if-no-files-found: error
-          retention-days: 1
+      - name: Upload file to bucket
+        uses: koraykoska/s3-upload-github-action@master
+        env:
+          FILE: /out/installer-arm64.tar
+          S3_ENDPOINT: 's3.skym.fi'
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   push-installer-image-amd64:
     needs: [ check-releases, build-boot-assets-amd64 ]
