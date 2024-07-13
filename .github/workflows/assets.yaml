@@ -69,6 +69,27 @@ jobs:
       talosReleaseTag: ${{ steps.talos-release.outputs.talos_release_tag }}
       talosReleaseBody: ${{ steps.talos-release-body.outputs.talos_release_body }}
 
+  check-installer:
+    needs: [ check-releases ]
+    name: Check for existing installer image
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check if Docker image exists
+        id: check_image
+        run: |
+          IMAGE_NAME="registry.skysolutions.fi"
+          TAG="${{needs.check-releases.outputs.talosReleaseTag }}"
+          if docker pull $IMAGE_NAME:$TAG; then
+            echo "Image exists"
+            echo "::set-output name=image_exists::true" >> $GITHUB_OUTPUT
+          else
+            echo "Image does not exist"
+            echo "::set-output name=image_exists::false" >> $GITHUB_OUTPUT
+          fi
+    outputs:
+      imageExists: ${{ steps.check_image.outputs.mage_exists }}
+
 #  build-kernel:
 #    needs: [ check-releases ]
 #    if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
@@ -136,8 +157,8 @@ jobs:
 #            PUSH="true"
 
   build-installer:
-    needs: [ check-releases ]
-    if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
+    needs: [ check-releases, check-installer ]
+    if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch' && needs.check-installer.outputs.imageExists == 'false'
     name: Build installer image
     runs-on: buildjet-4vcpu-ubuntu-2204
 
