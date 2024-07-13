@@ -184,7 +184,7 @@ jobs:
     needs: [ check-releases, build-installer ]
     if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
     name: Build boot assets (amd64)
-    runs-on: buildjet-16vcpu-ubuntu-2204
+    runs-on: buildjet-2vcpu-ubuntu-2204
 
     permissions:
       contents: write
