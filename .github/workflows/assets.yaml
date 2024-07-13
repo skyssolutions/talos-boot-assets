@@ -226,6 +226,11 @@ jobs:
             --system-extension-image ghcr.io/siderolabs/intel-ucode:${{ env.INTEL_UCODE_VERSION }} \
             --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }}
 
+      - name: Debug
+        run: |
+          env
+          ls -al
+
       - name: Upload file to bucket
         uses: koraykoska/s3-upload-github-action@master
         env:
