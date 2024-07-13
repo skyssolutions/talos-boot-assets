@@ -13,6 +13,7 @@ on:
 
 concurrency:
   group: ${{ github.actor }}-build
+  cancel-in-progress: true
 
 env:
   TALOS_VERSION : "${{ inputs.version || 'latest' }}"
@@ -176,7 +177,7 @@ jobs:
             USERNAME="library" \
             REGISTRY="registry.skysolutions.fi" \
             TAG="${{ needs.check-releases.outputs.talosReleaseTag }}" \
-            PKG_KERNEL="registry.skysolutions.fi/library/talos-kernel:latest@sha256:077f51cf9a412a9547ec6a9b1e12d783ffbd186b2763eb0b0629bf5d1fa24ae9" \
+            PKG_KERNEL="registry.skysolutions.fi/library/talos-kernel:latest@ha256:2ee4da7d7cc6963f9b06798efbf1e87b3b094f843655b0309d23ca4c9048a1c6" \
             PUSH="true"
 
   build-boot-assets-amd64:
