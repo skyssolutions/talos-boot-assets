@@ -78,7 +78,7 @@ jobs:
       - name: Check if Docker image exists
         id: check_image
         run: |
-          IMAGE_NAME="registry.skysolutions.fi"
+          IMAGE_NAME="registry.skysolutions.fi/library/installer"
           TAG="${{needs.check-releases.outputs.talosReleaseTag }}"
           if docker pull $IMAGE_NAME:$TAG; then
             echo "Image exists"
