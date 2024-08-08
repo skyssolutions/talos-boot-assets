@@ -198,7 +198,7 @@ jobs:
             USERNAME="library" \
             REGISTRY="registry.skysolutions.fi" \
             TAG="${{ needs.check-releases.outputs.talosReleaseTag }}" \
-            PKG_KERNEL="registry.skysolutions.fi/library/talos-kernel:latest@sha256:2ee4da7d7cc6963f9b06798efbf1e87b3b094f843655b0309d23ca4c9048a1c6" \
+            PKG_KERNEL="registry.skysolutions.fi/library/talos/kernel:latest@sha256:ee6b4247e25abff5c01a6d8e9c199b5790ed523b937f6b691a4039cbf6cfdbb5" \
             PUSH="true"
 
   build-boot-assets-amd64:
