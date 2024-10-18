@@ -18,9 +18,9 @@ concurrency:
 env:
   TALOS_VERSION : "${{ inputs.version || 'latest' }}"
   # renovate: depName=ghcr.io/siderolabs/intel-ucode
-  INTEL_UCODE_VERSION: 20240531
+  INTEL_UCODE_VERSION: 20240910
   # renovate: depName=ghcr.io/siderolabs/i915-ucode
-  I915_UCODE_VERSION: 20240709
+  I915_UCODE_VERSION: 20241017
   # renovate: depName=ghcr.io/siderolabs/util-linux-tools
   LINUX_UTILS_VERSION: 2.40.2
 
