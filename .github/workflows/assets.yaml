@@ -209,7 +209,7 @@ jobs:
     needs: [ check-releases ]
     if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
     name: Build dvb extension (amd64)
-    runs-on: arc-sol
+    runs-on: buildjet-8vcpu-ubuntu-2204
 
     permissions:
       contents: write
