@@ -8,8 +8,10 @@ on:
         description: Talos version
         default: latest
         required: false
-  schedule:
-    - cron: "0 0 * * 0"
+      extensions_repo_ref:
+        description: Git commit
+        required: true
+
 
 concurrency:
   group: ${{ github.actor }}-build
@@ -20,9 +22,10 @@ env:
   # renovate: depName=ghcr.io/siderolabs/intel-ucode
   INTEL_UCODE_VERSION: 20240531
   # renovate: depName=ghcr.io/siderolabs/i915-ucode
-  I915_UCODE_VERSION: 20240709
+  I915_UCODE_VERSION: 20240513
   # renovate: depName=ghcr.io/siderolabs/util-linux-tools
-  LINUX_UTILS_VERSION: 2.40.2
+  LINUX_UTILS_VERSION: 2.40.1
+  DVB_EXTENSION_VERSION: v1.9.1
 
 jobs:
   check-releases:
@@ -156,19 +159,68 @@ jobs:
 #            TAG="${{ needs.check-releases.outputs.talosReleaseTag }}" \
 #            PUSH="true"
 
-  build-installer:
-    needs: [ check-releases, check-installer ]
-    if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch' && needs.check-installer.outputs.imageExists == 'false'
-    name: Build installer image
-    runs-on: buildjet-4vcpu-ubuntu-2204
+#  build-installer:
+#    needs: [ check-releases, check-installer ]
+#    if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch' && needs.check-installer.outputs.imageExists == 'false'
+#    name: Build installer image
+#    runs-on: buildjet-4vcpu-ubuntu-2204
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v4
+#        with:
+#          repository: siderolabs/talos
+#          ref: refs/tags/${{ needs.check-releases.outputs.talosReleaseTag }}
+#          token: ${{ secrets.GITHUB_TOKEN }}
+#          fetch-depth: 0
+#
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v3
+#
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v3
+#
+#      - name: Login to GitHub Container Registry
+#        uses: docker/login-action@v3.2.0
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - name: Login to Harbor registry
+#        uses: docker/login-action@v3
+#        with:
+#          registry: registry.skysolutions.fi
+#          username: ${{ secrets.HARBOR_USER }}
+#          password: ${{ secrets.HARBOR_PASSWORD }}
+#
+#      - name: Build installer image
+#        run: |
+#          make installer \
+#            PLATFORM="linux/amd64,linux/arm64" \
+#            USERNAME="library" \
+#            REGISTRY="registry.skysolutions.fi" \
+#            TAG="${{ needs.check-releases.outputs.talosReleaseTag }}" \
+#            PKG_KERNEL="registry.skysolutions.fi/library/talos-kernel:latest@sha256:2ee4da7d7cc6963f9b06798efbf1e87b3b094f843655b0309d23ca4c9048a1c6" \
+#            PUSH="true"
+
+  build-extensions:
+    needs: [ check-releases ]
+    if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
+    name: Build dvb extension (amd64)
+    runs-on: arc-sol
+
+    permissions:
+      contents: write
+      packages: write
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          repository: siderolabs/talos
-          ref: refs/tags/${{ needs.check-releases.outputs.talosReleaseTag }}
+          repository: samip5/siderolabs-extensions
           token: ${{ secrets.GITHUB_TOKEN }}
+          ref: f0039e65561535e26bba9a7e57c0fcbb8e4c4636
           fetch-depth: 0
 
       - name: Set up QEMU
@@ -178,7 +230,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.3.0
+        uses: docker/login-action@v3.2.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -191,27 +243,28 @@ jobs:
           username: ${{ secrets.HARBOR_USER }}
           password: ${{ secrets.HARBOR_PASSWORD }}
 
-      - name: Build installer image
+      - name: Build dvb extension image
         run: |
-          make installer \
+          make dvb-cx23885 \
             PLATFORM="linux/amd64,linux/arm64" \
-            USERNAME="library" \
+            PKGS="v1.9.0-15-g45c4ba4" \
+            USERNAME="library/talos" \
             REGISTRY="registry.skysolutions.fi" \
-            TAG="${{ needs.check-releases.outputs.talosReleaseTag }}" \
-            PKG_KERNEL="registry.skysolutions.fi/library/talos/kernel:latest@sha256:ee6b4247e25abff5c01a6d8e9c199b5790ed523b937f6b691a4039cbf6cfdbb5" \
+            TAG="${{ env.DVB_EXTENSION_VERSION }}" \
             PUSH="true"
+      
 
   build-boot-assets-amd64:
-    needs: [ check-releases, build-installer ]
+    needs: [ check-releases ]
     if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
     name: Build boot assets (amd64)
-    runs-on: buildjet-2vcpu-ubuntu-2204
+    runs-on: arc-sol
 
     permissions:
       contents: write
 
     container:
-      image: registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }}
+      image: ghcr.io/siderolabs/installer:${{ needs.check-releases.outputs.talosReleaseTag }}
       options: --privileged
       volumes:
         - /dev:/dev
@@ -221,20 +274,22 @@ jobs:
         run: |
           /bin/imager installer \
             --arch amd64 \
-            --base-installer-image registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }} \
+            --base-installer-image ghcr.io/siderolabs/installer:${{ needs.check-releases.outputs.talosReleaseTag }} \
             --system-extension-image ghcr.io/siderolabs/i915-ucode:${{ env.I915_UCODE_VERSION }} \
             --system-extension-image ghcr.io/siderolabs/intel-ucode:${{ env.INTEL_UCODE_VERSION }} \
-            --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }}
+            --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }} \
+            --system-extension-image registry.skysolutions.fi/library/talos/dvb-cx23885:${{ env.DVB_EXTENSION_VERSION }}
 
       - name: Debug
         run: |
           env
           ls -al
+          ls -al /out/
 
       - name: Upload file to bucket
         uses: koraykoska/s3-upload-github-action@master
         env:
-          FILE: ./out/
+          FILE: /out/
           S3_ENDPOINT: 's3.skym.fi'
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
           S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
@@ -248,43 +303,43 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  build-boot-assets-arm64:
-    needs: [ check-releases, build-installer ]
-    if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
-    name: Build boot assets (arm64)
-    runs-on: buildjet-4vcpu-ubuntu-2204-arm
-
-    permissions:
-      contents: write
-
-    container:
-      image: registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }}
-      options: --privileged
-      volumes:
-        - /dev:/dev
-
-    steps:
-      - name: Build arm64 installer
-        run: |
-          /bin/imager installer \
-            --arch arm64 \
-            --base-installer-image registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }} \
-            --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi@sha256:f5734630fbae0647daf6e490ff91cd5f95220c3fc34e64364b2f245cde502a43 --overlay-name=rpi_generic \
-            --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }}
-
-      - name: Upload file to bucket
-        uses: koraykoska/s3-upload-github-action@master
-        env:
-          FILE: ./out/
-          S3_ENDPOINT: 's3.skym.fi'
-          S3_BUCKET: ${{ secrets.S3_BUCKET }}
-          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
-          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
+#  build-boot-assets-arm64:
+#    needs: [ check-releases, build-installer ]
+#    if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
+#    name: Build boot assets (arm64)
+#    runs-on: buildjet-4vcpu-ubuntu-2204-arm
+#
+#    permissions:
+#      contents: write
+#
+#    container:
+#      image: registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }}
+#      options: --privileged
+#      volumes:
+#        - /dev:/dev
+#
+#    steps:
+#      - name: Build arm64 installer
+#        run: |
+#          /bin/imager installer \
+#            --arch arm64 \
+#            --base-installer-image registry.skysolutions.fi/library/installer:${{ needs.check-releases.outputs.talosReleaseTag }} \
+#            --overlay-image registry.skysolutions.fi/library/sbc-raspberrypi@sha256:f5734630fbae0647daf6e490ff91cd5f95220c3fc34e64364b2f245cde502a43 --overlay-name=rpi_generic \
+#            --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }}
+#
+#      - name: Upload file to bucket
+#        uses: koraykoska/s3-upload-github-action@master
+#        env:
+#          FILE: /out/
+#          S3_ENDPOINT: 's3.skym.fi'
+#          S3_BUCKET: ${{ secrets.S3_BUCKET }}
+#          S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
+#          S3_SECRET_ACCESS_KEY: ${{ secrets.S3_SECRET_ACCESS_KEY }}
 
   push-installer-image-amd64:
     needs: [ check-releases, build-boot-assets-amd64 ]
     name: Push installer image (amd64)
-    runs-on: buildjet-4vcpu-ubuntu-2204
+    runs-on: arc-sol
 
     permissions:
       contents: read
@@ -304,7 +359,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.3.0
+        uses: docker/login-action@v3.2.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -318,55 +373,55 @@ jobs:
             /tmp/talos-build-assets/installer-amd64.tar \
             ghcr.io/${{ github.repository_owner }}/talos-installer:${{ needs.check-releases.outputs.talosReleaseTag }}
 
-  push-installer-image-arm64:
-    needs: [ check-releases, build-boot-assets-arm64 ]
-    name: Push installer image (arm64)
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: read
-      packages: write
-
-    steps:
-      - name: Download talos installer image
-        uses: actions/download-artifact@v3
-        with:
-          name: talos-installer-arm64
-          path: /tmp/talos-build-assets
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to GitHub Container Registry
-        uses: docker/login-action@v3.3.0
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - uses: imjasonh/setup-crane@v0.4
-      - name: Push installer image
-        run: |
-          crane push \
-            --platform linux/arm64 \
-            /tmp/talos-build-assets/installer-arm64.tar \
-            ghcr.io/${{ github.repository_owner }}/talos-installer:${{ needs.check-releases.outputs.talosReleaseTag }}
-
-  create-release:
-    needs: [ check-releases, push-installer-image-amd64, push-installer-image-arm64 ]
-    if: needs.check-releases.outputs.newTalosReleaseFound
-    name: Create a new release
-    runs-on: ubuntu-latest
-
-    permissions:
-      contents: write
-
-    steps:
-      - name: Create a new release
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: ${{ needs.check-releases.outputs.talosReleaseTag }}
-          body: ${{ needs.check-releases.outputs.talosReleaseBody }}
+#  push-installer-image-arm64:
+#    needs: [ check-releases, build-boot-assets-arm64 ]
+#    name: Push installer image (arm64)
+#    runs-on: ubuntu-latest
+#
+#    permissions:
+#      contents: read
+#      packages: write
+#
+#    steps:
+#      - name: Download talos installer image
+#        uses: actions/download-artifact@v3
+#        with:
+#          name: talos-installer-arm64
+#          path: /tmp/talos-build-assets
+#
+#      - name: Set up QEMU
+#        uses: docker/setup-qemu-action@v3
+#
+#      - name: Set up Docker Buildx
+#        uses: docker/setup-buildx-action@v3
+#
+#      - name: Login to GitHub Container Registry
+#        uses: docker/login-action@v3.2.0
+#        with:
+#          registry: ghcr.io
+#          username: ${{ github.actor }}
+#          password: ${{ secrets.GITHUB_TOKEN }}
+#
+#      - uses: imjasonh/setup-crane@v0.4
+#      - name: Push installer image
+#        run: |
+#          crane push \
+#            --platform linux/arm64 \
+#            /tmp/talos-build-assets/installer-arm64.tar \
+#            ghcr.io/${{ github.repository_owner }}/talos-installer:${{ needs.check-releases.outputs.talosReleaseTag }}
+#
+#  create-release:
+#    needs: [ check-releases, push-installer-image-amd64, push-installer-image-arm64 ]
+#    if: needs.check-releases.outputs.newTalosReleaseFound
+#    name: Create a new release
+#    runs-on: ubuntu-latest
+#
+#    permissions:
+#      contents: write
+#
+#    steps:
+#      - name: Create a new release
+#        uses: softprops/action-gh-release@v1
+#        with:
+#          tag_name: ${{ needs.check-releases.outputs.talosReleaseTag }}
+#          body: ${{ needs.check-releases.outputs.talosReleaseBody }}
