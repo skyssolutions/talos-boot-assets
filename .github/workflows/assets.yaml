@@ -21,9 +21,9 @@ concurrency:
 env:
   TALOS_VERSION : "${{ inputs.version || 'latest' }}"
   # renovate: depName=ghcr.io/siderolabs/intel-ucode
-  INTEL_UCODE_VERSION: 20241110
+  INTEL_UCODE_VERSION: 20241112
   # renovate: depName=ghcr.io/siderolabs/i915-ucode
-  I915_UCODE_VERSION: 20241112
+  I915_UCODE_VERSION: 20241110
   # renovate: depName=ghcr.io/siderolabs/util-linux-tools
   LINUX_UTILS_VERSION: 2.40.2
   DVB_EXTENSION_VERSION: v1.9.1
@@ -73,26 +73,26 @@ jobs:
       talosReleaseTag: ${{ steps.talos-release.outputs.talos_release_tag }}
       talosReleaseBody: ${{ steps.talos-release-body.outputs.talos_release_body }}
 
-  check-installer:
-    needs: [ check-releases ]
-    name: Check for existing installer image
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check if Docker image exists
-        id: check_image
-        run: |
-          IMAGE_NAME="registry.skysolutions.fi/library/installer"
-          TAG="${{needs.check-releases.outputs.talosReleaseTag }}"
-          if docker pull $IMAGE_NAME:$TAG; then
-            echo "Image exists"
-            echo "::set-output name=image_exists::true" >> $GITHUB_OUTPUT
-          else
-            echo "Image does not exist"
-            echo "::set-output name=image_exists::false" >> $GITHUB_OUTPUT
-          fi
-    outputs:
-      imageExists: ${{ steps.check_image.outputs.mage_exists }}
+#  check-installer:
+#    needs: [ check-releases ]
+#    name: Check for existing installer image
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Check if Docker image exists
+#        id: check_image
+#        run: |
+#          IMAGE_NAME="registry.skysolutions.fi/library/installer"
+#          TAG="${{needs.check-releases.outputs.talosReleaseTag }}"
+#          if docker pull $IMAGE_NAME:$TAG; then
+#            echo "Image exists"
+#            echo "::set-output name=image_exists::true" >> $GITHUB_OUTPUT
+#          else
+#            echo "Image does not exist"
+#            echo "::set-output name=image_exists::false" >> $GITHUB_OUTPUT
+#          fi
+#    outputs:
+#      imageExists: ${{ steps.check_image.outputs.mage_exists }}
 
 #  build-kernel:
 #    needs: [ check-releases ]
