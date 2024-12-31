@@ -21,11 +21,11 @@ concurrency:
 env:
   TALOS_VERSION : "${{ inputs.version || 'latest' }}"
   # renovate: depName=ghcr.io/siderolabs/intel-ucode
-  INTEL_UCODE_VERSION: 20240531
+  INTEL_UCODE_VERSION: 20241110
   # renovate: depName=ghcr.io/siderolabs/i915-ucode
-  I915_UCODE_VERSION: 20240513
+  I915_UCODE_VERSION: 20241112
   # renovate: depName=ghcr.io/siderolabs/util-linux-tools
-  LINUX_UTILS_VERSION: 2.40.1
+  LINUX_UTILS_VERSION: 2.40.2
   DVB_EXTENSION_VERSION: v1.9.1
 
 jobs:
@@ -244,7 +244,7 @@ jobs:
       - name: Build dvb extension image
         run: |
           make dvb-cx23885 \
-            PLATFORM="linux/amd64,linux/arm64" \
+            PLATFORM="linux/amd64" \
             PKGS="v1.9.0-15-g45c4ba4" \
             USERNAME="library/talos" \
             REGISTRY="registry.skysolutions.fi" \
@@ -287,7 +287,7 @@ jobs:
       - name: Upload file to bucket
         uses: koraykoska/s3-upload-github-action@master
         env:
-          FILE: /out/
+          FILE: /out/installer-amd64.tar
           S3_ENDPOINT: 's3.skym.fi'
           S3_BUCKET: ${{ secrets.S3_BUCKET }}
           S3_ACCESS_KEY_ID: ${{ secrets.S3_ACCESS_KEY_ID }}
