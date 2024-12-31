@@ -10,6 +10,7 @@ on:
         required: false
       extensions_repo_ref:
         description: Git commit
+        default: f0039e65561535e26bba9a7e57c0fcbb8e4c4636
         required: true
 
 
@@ -204,7 +205,7 @@ jobs:
 #            PKG_KERNEL="registry.skysolutions.fi/library/talos-kernel:latest@sha256:2ee4da7d7cc6963f9b06798efbf1e87b3b094f843655b0309d23ca4c9048a1c6" \
 #            PUSH="true"
 
-  build-extensions:
+  build-extensions-amd64:
     needs: [ check-releases ]
     if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
     name: Build dvb extension (amd64)
@@ -222,9 +223,6 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           ref: f0039e65561535e26bba9a7e57c0fcbb8e4c4636
           fetch-depth: 0
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -255,7 +253,7 @@ jobs:
       
 
   build-boot-assets-amd64:
-    needs: [ check-releases, build-extensions ]
+    needs: [ check-releases, build-extensions-amd64 ]
     if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
     name: Build boot assets (amd64)
     runs-on: arc-sol
