@@ -221,7 +221,7 @@ jobs:
         with:
           repository: samip5/siderolabs-extensions
           token: ${{ secrets.GITHUB_TOKEN }}
-          ref: f0039e65561535e26bba9a7e57c0fcbb8e4c4636
+          ref: ${{ inputs.extensions_repo_ref }}
           fetch-depth: 0
 
       - name: Set up Docker Buildx
