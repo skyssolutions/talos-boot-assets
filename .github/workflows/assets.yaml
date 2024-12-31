@@ -279,6 +279,10 @@ jobs:
             --system-extension-image ghcr.io/siderolabs/util-linux-tools:${{ env.LINUX_UTILS_VERSION }} \
             --system-extension-image registry.skysolutions.fi/library/talos/dvb-cx23885:${{ env.DVB_EXTENSION_VERSION }}
 
+      - name: Install crane
+        run: |
+          apk add --no-cache crane
+
       - name: Debug
         run: |
           env
