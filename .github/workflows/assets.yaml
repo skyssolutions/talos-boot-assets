@@ -255,7 +255,7 @@ jobs:
       
 
   build-boot-assets-amd64:
-    needs: [ check-releases ]
+    needs: [ check-releases, build-extensions ]
     if: needs.check-releases.outputs.newTalosReleaseFound || github.event_name == 'workflow_dispatch'
     name: Build boot assets (amd64)
     runs-on: arc-sol
