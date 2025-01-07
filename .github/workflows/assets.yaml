@@ -12,6 +12,10 @@ on:
         description: Git commit
         default: f0039e65561535e26bba9a7e57c0fcbb8e4c4636
         required: true
+      dvb_extension_version:
+        description: DVB extension version
+        default: v1.9.2.alpha.1
+        required: true
 
 
 concurrency:
@@ -26,7 +30,6 @@ env:
   I915_UCODE_VERSION: 20241110
   # renovate: depName=ghcr.io/siderolabs/util-linux-tools
   LINUX_UTILS_VERSION: 2.40.2
-  DVB_EXTENSION_VERSION: v1.9.1
 
 jobs:
   check-releases:
@@ -248,7 +251,7 @@ jobs:
             PKGS="v1.9.0-15-g45c4ba4" \
             USERNAME="library/talos" \
             REGISTRY="registry.skysolutions.fi" \
-            TAG="${{ env.DVB_EXTENSION_VERSION }}" \
+            TAG="${{ inputs.dvb_extension_version }}" \
             PUSH="true"
       
 
